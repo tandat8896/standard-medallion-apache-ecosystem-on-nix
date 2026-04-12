@@ -8,7 +8,7 @@
 !/flake.lock
 !/.envrc
 !/justfile
-
+!/README.md
 !/ETL/infrastructure/airflow-data/
 !/ETL/infrastructure/kafka-data/
 !/ETL/infrastructure/kafka-data/broker-1/
