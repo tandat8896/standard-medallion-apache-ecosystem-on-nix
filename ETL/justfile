@@ -1,0 +1,14 @@
+# Lệnh chạy cả 2 node cùng lúc
+start-kafka:
+    @echo "Đang khởi động Node 1 (Sếp)..."
+    kafka-server-start.sh infrastructure/.config/server-1.properties > infrastructure/kafka-data/broker-1.log 2>&1 &
+    @echo "Đang khởi động Node 2 (Lính)..."
+    kafka-server-start.sh infrastructure/.config/server-2.properties > infrastructure/kafka-data/broker-2.log 2>&1 &
+    @echo "Cả 2 Node đang chạy ngầm. Log được lưu tại infrastructure/kafka-data/broker-x.log"
+    @echo "Để tắt Kafka, hãy chạy: just stop-kafka"
+
+# Lệnh tắt sạch Kafka chạy ngầm
+stop-kafka:
+    @echo "Đang dẹp tiệm Kafka..."
+    -pkill -f kafka-server-start.sh
+    @echo "Đã tắt sạch các Node."
