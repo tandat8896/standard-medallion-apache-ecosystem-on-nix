@@ -30,6 +30,26 @@
         config.allowUnfree = true;
       };
 
+      # --- PHẦN THÊM MỚI: BUILD TRƯỚC 1 THẰNG KAFKA ---
+      airflow-kafka = pkgs.python3Packages.buildPythonPackage rec {
+        pname = "apache-airflow-providers-apache-kafka";
+        version = "1.6.0";
+        pyproject = true;
+
+        # Dùng fetchurl để trỏ thẳng vào link chuẩn trên PyPI
+        src = pkgs.fetchurl {
+          url = "https://files.pythonhosted.org/packages/source/a/apache-airflow-providers-apache-kafka/apache_airflow_providers_apache_kafka-${version}.tar.gz";
+          sha256 = "sha256-BZpWjvyPoVrSw168eSRmJoaF5cNDCek+bE6Q2KRNi+0=";
+        };
+
+        doCheck = false;
+        nativeBuildInputs = [ pkgs.python3Packages.flit-core ];
+        propagatedBuildInputs = [
+          pkgsUnstable.apache-airflow
+          pkgs.python3Packages.confluent-kafka
+        ];
+      }; # -----------------------------------------------
+
       codescene-cli = pkgs.stdenv.mkDerivation rec {
         pname = "codescene-cli";
         version = "latest";
@@ -76,6 +96,8 @@
         ps.polars
         ps.psycopg2-binary
         ps.kafka-python-ng
+        ps.cryptography
+        airflow-kafka # Nạp thằng Kafka vào đây
       ]);
 
       runtimeLibs = with pkgs; [
@@ -99,7 +121,7 @@
           pythonEnv
           pkgs.openjdk11
           pkgs.apacheKafka
-          pkgsUnstable.apache-airflow #
+          pkgsUnstable.apache-airflow
           pkgs.zookeeper
           pkgs.postgresql_15
           pkgs.tree
@@ -117,7 +139,7 @@
 
           # Config Java & Airflow
           export JAVA_HOME="${pkgs.openjdk11.home}"
-          export AIRFLOW_HOME="$PWD/.airflow"
+
           mkdir -p $AIRFLOW_HOME
         '';
       };
