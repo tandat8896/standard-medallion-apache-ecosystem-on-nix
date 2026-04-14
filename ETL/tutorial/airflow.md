@@ -168,3 +168,11 @@ airflow-kafka = pkgs.python3Packages.buildPythonPackage rec {
 - Nix: reproducible environment
 - direnv/dotenv: env injection
 - Fernet + JWT: security layer
+
+
+config airflow with scamr-sha-256 authentication and connect airflow-database to postgres
+tìm sqlalchemy
+thay = 
+sql_alchemy_conn = postgresql+psycopg2://airflow_admin@localhost:5432/postgres
+
+mk lưu trong .env

@@ -98,6 +98,7 @@
         ps.kafka-python-ng
         ps.cryptography
         airflow-kafka # Nạp thằng Kafka vào đây
+        ps.asyncpg
       ]);
 
       runtimeLibs = with pkgs; [
@@ -124,6 +125,8 @@
           pkgsUnstable.apache-airflow
           pkgs.zookeeper
           pkgs.postgresql_15
+          pkgs.postgresql_15.man
+          pkgs.man-db
           pkgs.tree
           rustToolchain
           pkgs.lldb_19
@@ -134,13 +137,29 @@
         ];
 
         shellHook = ''
+          # 1. Liên kết thư viện hệ thống và GPU
           export LD_LIBRARY_PATH="/usr/lib/wsl/lib:${pkgs.lib.makeLibraryPath runtimeLibs}:$LD_LIBRARY_PATH"
           export RUST_SRC_PATH="${rustToolchain}/lib/rustlib/src/rust/library"
 
-          # Config Java & Airflow
+          # 2. THÔNG NÒNG PYTHON & LSP (Chỉ đường vào /nix/store)
+          export PYTHONPATH="${pythonEnv}/${pkgs.python3.sitePackages}:$PYTHONPATH"
+
+          # 3. ÉP PYTHON NHÌN VÀO CẢ FOLDER CỦA ĐẠI CA (Dù có dấu '-')
+          # Dòng này giúp đại ca import các file trong airflow-data dễ hơn
+          export PYTHONPATH="$PWD/ETL/infrastructure/airflow-data:$PYTHONPATH"
+
+          # 4. Config Java
           export JAVA_HOME="${pkgs.openjdk11.home}"
 
-          mkdir -p $AIRFLOW_HOME
+          # 5. Config Airflow (Giữ nguyên dấu '-' theo ý đại ca)
+          export AIRFLOW_HOME="$PWD/ETL/infrastructure/airflow-data"
+          # mkdir -p "$AIRFLOW_HOME"
+          # 6. ÉP MANPATH NHÌN VÀO TÀI LIỆU CỦA POSTGRES
+          export MANPATH="$MANPATH:${pkgs.postgresql_15.man}/share/man"
+          
+          # Cập nhật cache cho man-db nếu cần
+          # mandb -u > /dev/null 2>&1
+
         '';
       };
     };
