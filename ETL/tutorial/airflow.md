@@ -198,3 +198,94 @@ repath/home/tandat8896-nix/tandat-interview/ETL/infrastructure/airflow-data/post
 
 xcom_objectstorage_path = 
 
+
+
+
+❄️ tandat-interview/ETL/infrastructure
+❯ kafka-topics.sh --create \                                                                                on  main [!?]
+  --topic user-events \
+  --partitions 2 \
+  --replication-factor 1 \
+  --bootstrap-server localhost:9092
+Created topic user-events.
+
+❄️ tandat-interview/ETL/infrastructure
+❯ kafka-log-dirs.sh --bootstrap-server localhost:9092 \                                                     on  main [!?]
+  --describe \
+  --topic-list user-events
+Querying brokers for log directories information
+Received log directory information from brokers 1,2
+{"brokers":[{"broker":1,"logDirs":[{"partitions":[{"partition":"user-events-0","size":0,"offsetLag":0,"isFuture":false}],"error":null,"logDir":"/home/tandat8896-nix/tandat-interview/ETL/infrastructure/kafka-data/broker-1"}]},{"broker":2,"logDirs":[{"partitions":[{"partition":"user-events-1","size":0,"offsetLag":0,"isFuture":false}],"error":null,"logDir":"/home/tandat8896-nix/tandat-interview/ETL/infrastructure/kafka-data/broker-2"}]}],"version":1}
+
+
+❄️ tandat-interview/ETL/infrastructure
+❯ kafka-console-producer.sh --bootstrap-server localhost:9092 \                                             on  main [!?]
+  --topic user-events \
+  --property "parse.key=true" \
+  --property "key.separator=:"
+>
+
+ Test Thử Với Console Producer (Dữ Liệu Nhỏ)
+bash# Terminal 1: Chạy Producer
+kafka-console-producer.sh \
+  --topic user-events \
+  --bootstrap-server localhost:9092 \
+  --property "key.separator=:" \
+  --property "parse.key=true"
+Sau đó type vào:
+user_1:{"event":"click"}
+user_1:{"event":"click"}
+user_1:{"event":"click"}
+user_2:{"event":"view"}
+user_3:{"event":"click"}
+user_1:{"event":"click"}
+user_1:{"event":"click"}
+user_1:{"event":"click"}
+user_1:{"event":"click"}
+user_1:{"event":"click"}
+(Ctrl+C để thoát sau)
+
+2️⃣ Check Partition Distribution
+bashkafka-log-dirs.sh --bootstrap-server localhost:9092 \
+  --describe \
+  --topic-list user-events
+Xem kết quả:
+
+Partition 0 và Partition 1 có bao nhiêu messages?
+user_1 có tập trung ở 1 partition không?
+
+
+3️⃣ Check Consumer Lag
+bash# Tạo consumer group để xem
+kafka-consumer-groups.sh \
+  --bootstrap-server localhost:9092 \
+  --group test-group \
+  --describe
+Xem:
+
+LAG của mỗi partition
+Partition nào processing chậm hơn?
+
+
+4️⃣ Xem Chi Tiết Messages
+bashkafka-console-consumer.sh \
+  --topic user-events \
+  --bootstrap-server localhost:9092 \
+  --from-beginning \
+  --property "print.key=true"
+Xem:
+
+Key của mỗi message là gì?
+Messages từ user_1 đều vào 1 partition?
+
+
+Sau khi hiểu rõ, mới chạy script produce 10,000 messages.
+
+
+
+hoặc giám sát 
+--> salting key để phân phối đều  hơn 
+--> thêm timestamp vào key để tránh tập trung vào 1 partitions
+--> thêm random salt vào key để phân phối đều hơ> [!NOTE]
+> **Lưu ý**: Khi chạy các lệnh Kafka, hãy đảm bảo rằng Kafka cluster của bạn đang hoạt động và bạn đã tạo topic `user-events` trước đó.
+

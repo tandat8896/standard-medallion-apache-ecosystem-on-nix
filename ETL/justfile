@@ -8,5 +8,28 @@ start-kafka:
 
 stop-kafka:
     @echo "Đang dẹp tiệm Kafka..."
+    -kafka-server-stop.sh
+    sleep 5
     -pkill -f kafka-server-start.sh
     @echo "Đã tắt sạch các Node."
+    # Lưu ý: Nếu có lỗi khi tắt, hãy kiểm tra lại các tiến trình Kafka đang chạy và dừng thủ công nếu cần.
+start-spark:
+  @echo "Đang khởi động Spark Master..."
+  spark-class org.apache.spark.deploy.master.Master --host 127.0.0.1 --port 7077 --webui-port 8181 > infrastructure/spark-data/spark-master.log 2>&1 &
+  @echo "Đợi master khởi động..."
+  sleep 3
+  @echo "Đang khởi động Spark Worker..."
+  spark-class org.apache.spark.deploy.worker.Worker --webui-port 8182 -d ./infrastructure/spark-data/worker-work spark://127.0.0.1:7077 > infrastructure/spark-data/spark-worker.log 2>&1 &
+  @echo "✅ Master UI: http://127.0.0.1:8181 | Worker UI: http://127.0.0.1:8182"
+
+stop-spark:
+  @echo "Đang dẹp tiệm Spark..."
+  -pkill -f org.apache.spark.deploy.master.Master
+  -pkill -f org.apache.spark.deploy.worker.Worker
+  -pkill -f pyspark
+  @echo "Đã tắt sạch Spark."
+
+shell:
+  pyspark --master spark://127.0.0.1:7077 --jars $SPARK_KAFKA_JARS --conf spark.executor.extraClassPath=$SPARK_KAFKA_JARS --conf spark.driver.extraClassPath=$SPARK_KAFKA_JARS --conf spark.jars=$SPARK_KAFKA_JARS --conf spark.executor.userClassPathFirst=true --conf spark.driver.userClassPathFirst=true
+test:
+  kafka-console-producer.sh --bootstrap-server localhost:9092 --topic user-events

@@ -205,3 +205,22 @@ MaxFollowerLag:         0
 MaxFollowerLagTimeMs:   0
 CurrentVoters:          [{"id": 1, "endpoints": ["CONTROLLER://localhost:9093"]}]
 CurrentObservers:       [{"id": 2, "directoryId": "bpVf6z5GaO5AcscYrlm68g"}]
+
+❄️ tandat-interview
+❯ kafka-topics.sh --bootstrap-server localhost:9092 \                                                                                                                              on  main
+  --create --topic test-etl \
+  --partitions 4 \
+  --replication-factor 2
+Created topic test-etl.
+
+❄️ tandat-interview
+❯ kafka-topics.sh --bootstrap-server localhost:9092 \                                                                                                                              on  main
+  --describe --topic test-etl
+Topic: test-etl	TopicId: 1qAwOlMUSmycSI-xktdjgg	PartitionCount: 4	ReplicationFactor: 2	Configs: min.insync.replicas=1,segment.bytes=1073741824
+	Topic: test-etl	Partition: 0	Leader: 2	Replicas: 2,1	Isr: 2,1	Elr: 	LastKnownElr:
+	Topic: test-etl	Partition: 1	Leader: 1	Replicas: 1,2	Isr: 1,2	Elr: 	LastKnownElr:
+	Topic: test-etl	Partition: 2	Leader: 1	Replicas: 1,2	Isr: 1,2	Elr: 	LastKnownElr:
+	Topic: test-etl	Partition: 3	Leader: 2	Replicas: 2,1	Isr: 2,1	Elr: 	LastKnownElr:
+
+❄️ tandat-interview
+❯                                                                                                                                                                                  on  main
