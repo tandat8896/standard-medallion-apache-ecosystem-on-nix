@@ -79,6 +79,7 @@
         cudaPackages.cudnn
         vscode-extensions.vadimcn.vscode-lldb.adapter
       ];
+      # Spark Kafka jars
       kafkaJars = [
         (pkgs.fetchurl {
           url = "https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.12/3.5.5/spark-sql-kafka-0-10_2.12-3.5.5.jar";
@@ -97,6 +98,26 @@
           sha256 = "10rzjswra1daf71ip9jiw84dixyrlp8y91p6q0d8pr8mfpp0a1ga";
         })
       ];
+      # Flink Kafka connector jar
+      flinkKafkaJar = pkgs.fetchurl {
+        url = "https://repo1.maven.org/maven2/org/apache/flink/flink-connector-kafka/3.2.0-1.19/flink-connector-kafka-3.2.0-1.19.jar";
+        sha256 = "1s2gq2r127xsxy3zyn4b5z21bsigzir1mg46kj6ayf19ld16rr06";
+      };
+      # Flink với kafka connector baked in
+      flink = pkgs.stdenv.mkDerivation rec {
+        pname = "flink";
+        version = "1.19.1";
+        src = pkgs.fetchurl {
+          url = "https://archive.apache.org/dist/flink/flink-${version}/flink-${version}-bin-scala_2.12.tgz";
+          sha256 = "1kmxk7kkkmr6f88m0a7yxp0zfdxii6sr4gzh68cx8wfaxzrnjqar";
+        };
+        sourceRoot = ".";
+        installPhase = ''
+          mkdir -p $out
+          cp -r flink-${version}/. $out/
+          cp ${flinkKafkaJar} $out/lib/flink-connector-kafka-3.2.0-1.19.jar
+        '';
+      };
     in
     {
       devShells.${system}.default = pkgs.mkShell {
@@ -117,14 +138,30 @@
           pkgs.just
           pkgs.jq
           pkgs.jqp
+          flink
+          pkgs.krb5 
         ];
         shellHook = ''
           export LD_LIBRARY_PATH="/usr/lib/wsl/lib:${pkgs.lib.makeLibraryPath runtimeLibs}:$LD_LIBRARY_PATH"
           export RUST_SRC_PATH="${rustToolchain}/lib/rustlib/src/rust/library"
           export JAVA_HOME="${pkgs.openjdk11.home}"
-          export AIRFLOW_HOME="$PWD/.airflow"
-          mkdir -p $AIRFLOW_HOME
+
+          # Tất cả data dồn vào ETL/infrastructure/<service>-data/
+          export AIRFLOW_HOME="$PWD/ETL/infrastructure/airflow-data"
           export SPARK_KAFKA_JARS="${pkgs.lib.concatStringsSep "," kafkaJars}"
+          export FLINK_HOME="${flink}"
+          export PATH="$FLINK_HOME/bin:$PATH"
+          export FLINK_CONF_DIR="$PWD/ETL/infrastructure/flink-data/conf"
+          export FLINK_LOG_DIR="$PWD/ETL/infrastructure/flink-data/logs"
+
+          mkdir -p $AIRFLOW_HOME
+          mkdir -p $FLINK_LOG_DIR
+          export ZOOCFGDIR="$PWD/ETL/infrastructure/zookeeper-data/conf"
+          export ZOO_LOG_DIR="$PWD/ETL/infrastructure/zookeeper-data/logs"
+          mkdir -p $ZOOCFGDIR
+          mkdir -p $ZOO_LOG_DIR
+          export KRB5_CONFIG="$PWD/ETL/infrastructure/kerberos-data/conf/krb5.conf"
+          export KRB5_KDC_PROFILE="$PWD/ETL/infrastructure/kerberos-data/conf/kdc.conf"
         '';
       };
     };

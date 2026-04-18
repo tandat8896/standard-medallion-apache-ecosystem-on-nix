@@ -1,29 +1,62 @@
 /*
 .*
 !/.gitignore
-!.env.example
+!/.env.example
 !/ETL/
 !/flake.nix
 !/flake.lock
 !/.envrc
 !/justfile
 !/README.md
-!/ETL/infrastructure/airflow-data/
-!/ETL/infrastructure/kafka-data/
-!/ETL/infrastructure/kafka-data/broker-1/
-!/ETL/infrastructure/kafka-data/broker-2/
-!/ETL/infrastructure/spark-data/
-!/ETL/infrastructure/.config/
-!/ETL/infrastructure/.config/*.properties
-/ETL/infrastructure/airflow-data/*
-/ETL/infrastructure/kafka-data/broker-1/*
-!/ETL/infrastructure/kafka-data/broker-1/.gitkeep
-/ETL/infrastructure/kafka-data/broker-2/*
-!/ETL/infrastructure/kafka-data/broker-2/.gitkeep
-/ETL/infrastructure/spark-data/*
-!/ETL/infrastructure/spark-data/.gitkeep
-.env
+!/README-flink.md
+
+# --- 1. SHOW CONFIGS (Mở khóa toàn bộ file cấu hình) ---
+!**/conf/
+!**/.config/
+!**/*.yaml
+!**/*.yml
+!**/*.conf
+!**/*.properties
+!**/*.sh
+!**/*.envrc
+!**/masters
+!**/workers
+!**/java.env
+!**/zk_jaas.conf
+!**/flink-jaas.conf
+
+# --- 2. HIDE LOGS (Chặn tuyệt đối mọi loại log) ---
+*.log
 **/*.log
+*.out
+**/*.out
+**/logs/*
+
+# --- 3. GITKEEPS (Giữ cấu trúc thư mục trống) ---
+!**/.gitkeep
+
+# ========================================================
+# EXCLUDE (Chặn dữ liệu thô và bảo mật)
+# ========================================================
+
+# Chặn data nặng/database
+/ETL/infrastructure/airflow-data/postgres/
+/ETL/infrastructure/kafka-data/broker-1/*
+/ETL/infrastructure/kafka-data/broker-2/*
+/ETL/infrastructure/spark-data/worker-work/
+/ETL/infrastructure/flink-data/ha/
+/ETL/infrastructure/zookeeper-data/data/
+
+# BẢO MẬT: Chặn Keytabs và KDC Database
+/ETL/infrastructure/kerberos-data/data/principal*
+/ETL/infrastructure/kerberos-data/data/*.keytab
+/ETL/infrastructure/kerberos-data/data/.k5.*
+
+# Môi trường Local & Build artifacts
+.env
+.direnv/
+**/*.pyc
 **/__pycache__/
 **/.venv/
-
+/LeetCode/Rust/target/
+/ETL/infrastructure/kerberos-data/conf/krb5.conf.5.gz
