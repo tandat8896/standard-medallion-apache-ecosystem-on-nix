@@ -60,3 +60,17 @@
 **/.venv/
 /LeetCode/Rust/target/
 /ETL/infrastructure/kerberos-data/conf/krb5.conf.5.gz
+
+
+# --- 1.5 DATALAKE STRUCTURE (Mở khóa cấu trúc Medallion) ---
+!/datalake/
+!/ingest/
+!/dead_letter/
+
+# Nhưng chặn toàn bộ dữ liệu thực tế bên trong (Parquet, CSV, JSON, v.v.)
+/datalake/**/*.parquet
+/datalake/**/*.ndjson
+/datalake/**/*.csv
+/datalake/**/*.json
+/ingest/raw/**/*
+!**/raw/**/.gitkeep
