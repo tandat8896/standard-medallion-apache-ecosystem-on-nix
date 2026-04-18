@@ -328,6 +328,11 @@ export WEBUIPORT=8081
 
 Thêm vào shellHook flake.nix.
 
+
+----
+
+### 14.1 Xác định vị trí Flink trong Nix Store
+Dùng `which` để tìm đường dẫn chính xác của phiên bản Flink đang chạy:
 ---
 
 ## Thứ tự khởi động đúng
@@ -343,6 +348,15 @@ zkServer.sh start
 export WEBUIPORT=8081
 start-cluster.sh
 ```
+
+
+# Nhặt file cấu hình log chuẩn
+install -m 644 $FLINK_HOME/conf/log4j.properties $FLINK_CONF_DIR/log4j.properties
+install -m 644 $FLINK_HOME/conf/log4j-console.properties $FLINK_CONF_DIR/log4j-console.properties
+
+# Nhặt thêm file điều hướng Cluster để start-cluster.sh hoạt động ổn định
+install -m 644 $FLINK_HOME/conf/masters $FLINK_CONF_DIR/masters
+install -m 644 $FLINK_HOME/conf/workers $FLINK_CONF_DIR/workers
 
 ---
 

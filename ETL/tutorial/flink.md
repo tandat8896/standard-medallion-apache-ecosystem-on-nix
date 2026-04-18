@@ -336,4 +336,168 @@ else
     "${FLINK_BIN_DIR}"/flink-daemon.sh $STARTSTOP $ENTRYPOINT "${args[@]}"
 
 ❄️ tandat-interview/ETL
+
+
+
+thieu file log4j
+❯❄️ tandat-interview/ETL
+❯ which flink                                        on  feat/medallion-logic [!]
+/nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin/flink
+
+❄️ tandat-interview/ETL
+❯ cd /nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin/
+direnv: unloading
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin
+❯ ls -la
+total 2380
+dr-xr-xr-x  2 root root    4096 Jan  1  1970 .
+dr-xr-xr-x 10 root root    4096 Jan  1  1970 ..
+-r--r--r--  3 root root 2290704 Jan  1  1970 bash-java-utils.jar
+-r-xr-xr-x  3 root root    7838 Jan  1  1970 bash-java-utils.sh
+-r-xr-xr-x  3 root root    1584 Jan  1  1970 config-parser-utils.sh
+-r-xr-xr-x  3 root root   20735 Jan  1  1970 config.sh
+-r-xr-xr-x  4 root root    1364 Jan  1  1970 find-flink-home.sh
+-r-xr-xr-x  4 root root    2427 Jan  1  1970 flink
+-r-xr-xr-x  4 root root    4768 Jan  1  1970 flink-console.sh
+-r-xr-xr-x  4 root root    6829 Jan  1  1970 flink-daemon.sh
+-r-xr-xr-x  4 root root    1610 Jan  1  1970 historyserver.sh
+-r-xr-xr-x  3 root root    2544 Jan  1  1970 jobmanager.sh
+-r-xr-xr-x  4 root root    1696 Jan  1  1970 kubernetes-jobmanager.sh
+-r-xr-xr-x  4 root root    1891 Jan  1  1970 kubernetes-session.sh
+-r-xr-xr-x  4 root root    1816 Jan  1  1970 kubernetes-taskmanager.sh
+-r-xr-xr-x  3 root root    1934 Jan  1  1970 migrate-config-file.sh
+-r-xr-xr-x  4 root root    3048 Jan  1  1970 pyflink-shell.sh
+-r-xr-xr-x  3 root root    4212 Jan  1  1970 sql-client.sh
+-r-xr-xr-x  4 root root    3519 Jan  1  1970 sql-gateway.sh
+-r-xr-xr-x  4 root root    2052 Jan  1  1970 standalone-job.sh
+-r-xr-xr-x  4 root root    1883 Jan  1  1970 start-cluster.sh
+-r-xr-xr-x  4 root root    1900 Jan  1  1970 start-zookeeper-quorum.sh
+-r-xr-xr-x  4 root root    1663 Jan  1  1970 stop-cluster.sh
+-r-xr-xr-x  4 root root    1891 Jan  1  1970 stop-zookeeper-quorum.sh
+-r-xr-xr-x  4 root root    3006 Jan  1  1970 taskmanager.sh
+-r-xr-xr-x  4 root root    1899 Jan  1  1970 yarn-session.sh
+-r-xr-xr-x  4 root root    2451 Jan  1  1970 zookeeper.sh
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin
+❯ cd ..
+
+❄️ /nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1
+❯ ls -la
+total 2048
+dr-xr-xr-x   10 root root      4096 Jan  1  1970 .
+drwxrwxr-t 1837 root nixbld 1892352 Apr 18 01:13 ..
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 bin
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 conf
+dr-xr-xr-x    6 root root      4096 Jan  1  1970 examples
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 lib
+-r--r--r--   25 root root     11357 Jan  1  1970 LICENSE
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 licenses
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 log
+-r--r--r--    3 root root    144074 Jan  1  1970 NOTICE
+dr-xr-xr-x    3 root root      4096 Jan  1  1970 opt
+dr-xr-xr-x   10 root root      4096 Jan  1  1970 plugins
+-r--r--r--    4 root root      1309 Jan  1  1970 README.txt
+
+❄️ /nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1
+❯ cd conf
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/conf
+❯ ls -la
+total 64
+dr-xr-xr-x  2 root root  4096 Jan  1  1970 .
+dr-xr-xr-x 10 root root  4096 Jan  1  1970 ..
+-r--r--r--  3 root root 14428 Jan  1  1970 config.yaml
+-r--r--r--  4 root root  2940 Jan  1  1970 log4j-cli.properties
+-r--r--r--  4 root root  3207 Jan  1  1970 log4j-console.properties
+-r--r--r--  4 root root  2731 Jan  1  1970 log4j.properties
+-r--r--r--  4 root root  2064 Jan  1  1970 log4j-session.properties
+-r--r--r--  4 root root  2884 Jan  1  1970 logback-console.xml
+-r--r--r--  4 root root  1569 Jan  1  1970 logback-session.xml
+-r--r--r--  4 root root  2333 Jan  1  1970 logback.xml
+-r--r--r--  4 root root    15 Jan  1  1970 masters
+-r--r--r--  4 root root    10 Jan  1  1970 workers
+-r--r--r--  4 root root  1434 Jan  1  1970 zoo.cfg
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/conf
+❯❄️ tandat-interview/ETL
+❯ which flink                                        on  feat/medallion-logic [!]
+/nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin/flink
+
+❄️ tandat-interview/ETL
+❯ cd /nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin/
+direnv: unloading
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin
+❯ ls -la
+total 2380
+dr-xr-xr-x  2 root root    4096 Jan  1  1970 .
+dr-xr-xr-x 10 root root    4096 Jan  1  1970 ..
+-r--r--r--  3 root root 2290704 Jan  1  1970 bash-java-utils.jar
+-r-xr-xr-x  3 root root    7838 Jan  1  1970 bash-java-utils.sh
+-r-xr-xr-x  3 root root    1584 Jan  1  1970 config-parser-utils.sh
+-r-xr-xr-x  3 root root   20735 Jan  1  1970 config.sh
+-r-xr-xr-x  4 root root    1364 Jan  1  1970 find-flink-home.sh
+-r-xr-xr-x  4 root root    2427 Jan  1  1970 flink
+-r-xr-xr-x  4 root root    4768 Jan  1  1970 flink-console.sh
+-r-xr-xr-x  4 root root    6829 Jan  1  1970 flink-daemon.sh
+-r-xr-xr-x  4 root root    1610 Jan  1  1970 historyserver.sh
+-r-xr-xr-x  3 root root    2544 Jan  1  1970 jobmanager.sh
+-r-xr-xr-x  4 root root    1696 Jan  1  1970 kubernetes-jobmanager.sh
+-r-xr-xr-x  4 root root    1891 Jan  1  1970 kubernetes-session.sh
+-r-xr-xr-x  4 root root    1816 Jan  1  1970 kubernetes-taskmanager.sh
+-r-xr-xr-x  3 root root    1934 Jan  1  1970 migrate-config-file.sh
+-r-xr-xr-x  4 root root    3048 Jan  1  1970 pyflink-shell.sh
+-r-xr-xr-x  3 root root    4212 Jan  1  1970 sql-client.sh
+-r-xr-xr-x  4 root root    3519 Jan  1  1970 sql-gateway.sh
+-r-xr-xr-x  4 root root    2052 Jan  1  1970 standalone-job.sh
+-r-xr-xr-x  4 root root    1883 Jan  1  1970 start-cluster.sh
+-r-xr-xr-x  4 root root    1900 Jan  1  1970 start-zookeeper-quorum.sh
+-r-xr-xr-x  4 root root    1663 Jan  1  1970 stop-cluster.sh
+-r-xr-xr-x  4 root root    1891 Jan  1  1970 stop-zookeeper-quorum.sh
+-r-xr-xr-x  4 root root    3006 Jan  1  1970 taskmanager.sh
+-r-xr-xr-x  4 root root    1899 Jan  1  1970 yarn-session.sh
+-r-xr-xr-x  4 root root    2451 Jan  1  1970 zookeeper.sh
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/bin
+❯ cd ..
+
+❄️ /nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1
+❯ ls -la
+total 2048
+dr-xr-xr-x   10 root root      4096 Jan  1  1970 .
+drwxrwxr-t 1837 root nixbld 1892352 Apr 18 01:13 ..
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 bin
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 conf
+dr-xr-xr-x    6 root root      4096 Jan  1  1970 examples
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 lib
+-r--r--r--   25 root root     11357 Jan  1  1970 LICENSE
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 licenses
+dr-xr-xr-x    2 root root      4096 Jan  1  1970 log
+-r--r--r--    3 root root    144074 Jan  1  1970 NOTICE
+dr-xr-xr-x    3 root root      4096 Jan  1  1970 opt
+dr-xr-xr-x   10 root root      4096 Jan  1  1970 plugins
+-r--r--r--    4 root root      1309 Jan  1  1970 README.txt
+
+❄️ /nix/store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1
+❯ cd conf
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/conf
+❯ ls -la
+total 64
+dr-xr-xr-x  2 root root  4096 Jan  1  1970 .
+dr-xr-xr-x 10 root root  4096 Jan  1  1970 ..
+-r--r--r--  3 root root 14428 Jan  1  1970 config.yaml
+-r--r--r--  4 root root  2940 Jan  1  1970 log4j-cli.properties
+-r--r--r--  4 root root  3207 Jan  1  1970 log4j-console.properties
+-r--r--r--  4 root root  2731 Jan  1  1970 log4j.properties
+-r--r--r--  4 root root  2064 Jan  1  1970 log4j-session.properties
+-r--r--r--  4 root root  2884 Jan  1  1970 logback-console.xml
+-r--r--r--  4 root root  1569 Jan  1  1970 logback-session.xml
+-r--r--r--  4 root root  2333 Jan  1  1970 logback.xml
+-r--r--r--  4 root root    15 Jan  1  1970 masters
+-r--r--r--  4 root root    10 Jan  1  1970 workers
+-r--r--r--  4 root root  1434 Jan  1  1970 zoo.cfg
+
+❄️ store/bz578ix1lqrajd3bjn6k1ghzk1iig539-flink-1.19.1/conf
 ❯                                                                             on  main [!?]

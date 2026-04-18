@@ -35,7 +35,7 @@ jobmanager:
   #
   # To enable this, set the bind-host address to one that has access to an outside facing network
   # interface, such as 0.0.0.0.
-  bind-host: localhost
+  bind-host: 0.0.0.0
   rpc:
     # The external address of the host on which the JobManager runs and can be
     # reached by the TaskManagers and any clients which want to connect. This setting
@@ -52,7 +52,7 @@ jobmanager:
     process:
       # The total process memory size for the JobManager.
       # Note this accounts for all memory usage within the JobManager process, including JVM metaspace and other overhead.
-      size: 1600m
+      size: 1000m
   execution:
     # The failover strategy, i.e., how the job computation recovers from task failures.
     # Only restart tasks that may have been affected by the task failure, which typically includes
@@ -67,7 +67,7 @@ taskmanager:
   #
   # To enable this, set the bind-host address to one that has access to an outside facing network
   # interface, such as 0.0.0.0.
-  bind-host: localhost
+  bind-host: 0.0.0.0
   # The address of the host on which the TaskManager runs and can be reached by the JobManager and
   # other TaskManagers. If not specified, the TaskManager will try different strategies to identify
   # the address.
@@ -87,7 +87,7 @@ taskmanager:
       # Note this accounts for all memory usage within the TaskManager process, including JVM metaspace and other overhead.
       # To exclude JVM metaspace and overhead, please, use total Flink memory size instead of 'taskmanager.memory.process.size'.
       # It is not recommended to set both 'taskmanager.memory.process.size' and Flink memory.
-      size: 1728m
+      size: 1600m
 
 parallelism:
   # The parallelism used for programs that did not specify and other parallelism.
@@ -140,7 +140,7 @@ execution:
     externalized-checkpoint-retention: RETAIN_ON_CANCELLATION
     max-concurrent-checkpoints: 1
 #     min-pause: 0
-    mode: [EXACTLY_ONCE]
+    mode: EXACTLY_ONCE
 #     timeout: 10min
 #     tolerable-failed-checkpoints: 0
 #     unaligned: false
@@ -175,12 +175,12 @@ rest:
   #
   # To enable this, set the bind address to one that has access to outside-facing
   # network interface, such as 0.0.0.0.
-  bind-address: localhost
+  bind-address: 0.0.0.0
   # # The port to which the REST client connects to. If rest.bind-port has
   # # not been specified, then the server will bind to this port as well.
   port: 8081
   # # Port range for the REST and web server to bind to.
-  bind-port: 8080-8090
+  bind-port: 8081
 
 web:
   submit:
