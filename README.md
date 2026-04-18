@@ -1,34 +1,169 @@
-# ETL Lab
+# 🏗️ Medallion Data Platform – End-to-End Architecture
 
-## Setup
-```bash
-direnv reload
-```
+## 📐 Kiến trúc logic (Medallion)
 
-## Chạy theo thứ tự
+### 🥉 Bronze (Raw Layer)
 
-```bash
-just start-kafka
-just start-spark
-just shell
-```
+* Ingest dữ liệu thô từ **10+ nguồn (Streaming & Batch)**
+* Format: `ndjson`
+* Giữ nguyên **schema gốc**
+* Bổ sung metadata: `ingestion_ts`
+* Mục tiêu: đảm bảo **data lineage + traceability**
 
-## Test streaming
+---
 
-Terminal 1 - start stream trong pyspark shell:
-```python
-df = spark.readStream.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option("subscribe", "user-events").option("startingOffsets", "latest").load()
-query = df.selectExpr("CAST(value AS STRING)").writeStream.format("console").start()
-```
+### 🥈 Silver (Validated Layer)
 
-Terminal 2 - gửi data:
-```bash
-just test
-```
+* Xử lý bằng Spark:
 
-## Tắt
-```bash
-just stop-spark
-just stop-kafka
-```
+  * Data cleaning
+  * Deduplication
+  * Schema enforcement (cast kiểu dữ liệu)
+* Format lưu trữ: `Parquet`
+* Tối ưu:
 
+  * Columnar storage
+  * Query performance
+
+---
+
+### 🥇 Gold (Analytics Layer)
+
+* Precompute các bảng:
+
+  * `Daily Revenue`
+  * `User Retention`
+* Use-case:
+
+  * Dashboard BI
+  * ML Training datasets
+* Đặc điểm:
+
+  * Denormalized
+  * Query-ready
+
+---
+
+## 🛠️ Stack công nghệ
+
+### 📥 Ingestion
+
+* Kafka → Messaging backbone
+* Flink → Real-time stream processing
+* Spark → Batch processing
+
+### 💾 Storage
+
+* Medallion Data Lake:
+
+  * Bronze: NDJSON
+  * Silver/Gold: Parquet
+* Delta Lake (Databricks / Cloud)
+
+### 🔐 Security
+
+* Kerberos KDC (Authentication)
+* SASL/GSSAPI (Kafka security)
+
+### 🧱 Infrastructure
+
+* NixOS + Nix Flakes → reproducible environment
+* WSL2 + Docker → local dev
+* Terraform → infrastructure as code
+
+### 🤖 MLOps
+
+* Feast → Feature Store
+* MLflow → experiment tracking
+* KServe → model serving
+
+---
+
+## 📋 Checklist triển khai (Roadmap to Production)
+
+### 1. 🧱 Infrastructure & Security
+
+* [x] Setup môi trường với Nix Flakes
+* [x] Cấu hình Kerberos KDC (Realm: `ETL.LOCAL`)
+* [x] Tạo keytabs cho Kafka / Zookeeper / Flink
+* [x] Setup Zookeeper High Availability (Leader Election)
+
+---
+
+### 2. 🚰 Ingestion & Storage
+
+* [ ] Tạo Kafka topics cho 10 nguồn dữ liệu
+* [ ] Triển khai Flink sink → `/datalake/bronze/`
+
+  * Có event-time watermark
+* [ ] Setup Dead Letter Queue (DLQ) cho JSON lỗi
+* [ ] Spark job:
+
+  * Transform Bronze → Silver
+  * Partition overwrite strategy
+
+---
+
+### 3. 🧠 Logic xử lý & ML
+
+* [ ] Feature Engineering (Spark SQL trên Silver)
+* [ ] Tích hợp Feast (Online + Offline features)
+* [ ] Train model Fraud Detection:
+
+  * XGBoost / LightGBM
+* [ ] Log experiment vào MLflow
+
+---
+
+### 4. 📊 Operations & Monitoring
+
+* [ ] Checkpointing:
+
+  * Path: `/datalake/checkpoints/`
+  * Đảm bảo fault tolerance
+* [ ] Monitoring:
+
+  * Grafana + Prometheus
+  * Kafka throughput
+  * Flink backpressure
+* [ ] Orchestration:
+
+  * Airflow hoặc ArgoCD
+
+---
+
+## 💡 Trade-off Notes (Design Decisions)
+
+* **Flink (Bronze Layer)**:
+
+  * Ưu tiên xử lý **late data**
+  * Latency thấp (<1s)
+  * Strong event-time semantics
+
+* **Spark (Silver/Gold Layer)**:
+
+  * Tối ưu hóa **shuffle (AQE)**
+  * Xử lý tốt:
+
+    * Large joins
+    * Batch transformations
+  * Phù hợp cho analytical workloads
+
+---
+
+## 🚀 Tổng kết
+
+Kiến trúc này tách biệt rõ:
+
+* **Data ingestion (Flink)**
+* **Data processing (Spark)**
+* **Data serving (Gold + ML)**
+
+👉 Giúp hệ thống:
+
+* Scalable
+* Fault-tolerant
+* Production-ready
+* Phù hợp cả BI + ML workloads
+
+---
