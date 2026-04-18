@@ -92,10 +92,14 @@
 
 ### 2. 🚰 Ingestion & Storage
 
-* [ ] Tạo Kafka topics cho 10 nguồn dữ liệu
-* [ ] Triển khai Flink sink → `/datalake/bronze/`
+* [x] Tạo Kafka topics cho 10 nguồn dữ liệu
+* [x] Triển khai Flink sink → `/datalake/bronze/`
 
   * Có event-time watermark
+  * **JobID: ef8371b8620e2b7c52548d08e8a414e0**
+  * 5 Kafka topics streaming: `events.user`, `events.txn`, `events.iot`, `logs.app`, `clicks.web`
+  * Checkpoint dir: `/datalake/checkpoints/flink/bronze_ingest`
+  * Output: `/datalake/bronze/` (partitioned by source/dt/hour)
 * [ ] Setup Dead Letter Queue (DLQ) cho JSON lỗi
 * [ ] Spark job:
 
