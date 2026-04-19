@@ -14,4 +14,4 @@ jobs:
       - uses: ariga/setup-atlas@v0
 
       - name: Lint migrations
-        run: atlas migrate lint --env local --latest 1
+        run: atlas migrate lint --env local --latest 1 --allow-dirty

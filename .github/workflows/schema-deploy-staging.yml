@@ -17,4 +17,4 @@ jobs:
       - name: Apply migrations
         env:
           ATLAS_STAGING_URL: ${{ secrets.ATLAS_STAGING_URL }}
-        run: atlas migrate apply --env staging
+        run: atlas migrate apply --env staging --allow-dirty

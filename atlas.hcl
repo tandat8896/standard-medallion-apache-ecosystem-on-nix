@@ -2,10 +2,8 @@
 # Security: ALL passwords use environment variables, NO hardcoded credentials!
 
 env "local" {
-  src = "file://ETL/infrastructure/postgres-schemas/create_gold_tables.sql"
-  # Use ATLAS_LOCAL_URL env var, fallback to default if not set
-  url = getenv("ATLAS_LOCAL_URL") != "" ? getenv("ATLAS_LOCAL_URL") : "postgres://tandat8896-nix@localhost:5432/etl_analytics?sslmode=disable"
-
+  url = getenv("ATLAS_LOCAL_URL")
+  
   migration {
     dir = "file://migrations"
   }
