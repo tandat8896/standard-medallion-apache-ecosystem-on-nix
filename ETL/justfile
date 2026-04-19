@@ -1,78 +1,26 @@
-# ============================================================================
-# SERVICE MANAGEMENT - Individual Services
-# ============================================================================
-
-start-kdc:
-    @echo "[KDC] Đang khởi động KDC..."
-    @if pgrep -f krb5kdc > /dev/null; then \
-        echo "   [OK] KDC already running"; \
-    else \
-        krb5kdc -n -r ETL.LOCAL -d infrastructure/kerberos-data/data/principal -p 8888 > infrastructure/kerberos-data/logs/krb5kdc.log 2>&1 & \
-        sleep 1; \
-        echo "   [OK] KDC started :8888"; \
-    fi
-
-stop-kdc:
-    @echo "Đang dẹp tiệm KDC..."
-    -pkill -f krb5kdc
-    @echo "Đã tắt KDC."
-
-start-zookeeper:
-    @echo "[STATUS] Đang khởi động ZooKeeper với Kerberos..."
-    @export SERVER_JVMFLAGS="-Djava.security.auth.login.config={{justfile_directory()}}/infrastructure/zookeeper-data/conf/zk_jaas.conf -Djava.security.krb5.conf={{justfile_directory()}}/infrastructure/kerberos-data/conf/krb5.conf" && \
-    zkServer.sh start
-    @echo "   [OK] ZooKeeper started :2181"
-
-stop-zookeeper:
-    @echo "Đang dẹp tiệm ZooKeeper..."
-    zkServer.sh stop
-    @echo "Đã tắt ZooKeeper."
-
 start-kafka:
-    @echo "[Kafka] Đang khởi động Kafka..."
-    @if pgrep -f "kafka.Kafka" > /dev/null; then \
-        echo "   [OK] Kafka already running"; \
-    else \
-        kafka-server-start.sh infrastructure/.config/server-1.properties > infrastructure/kafka-data/broker-1.log 2>&1 & \
-        kafka-server-start.sh infrastructure/.config/server-2.properties > infrastructure/kafka-data/broker-2.log 2>&1 & \
-        sleep 5; \
-        echo "   [OK] Kafka started :9092 (2 brokers)"; \
-    fi
+    @echo "Đang khởi động Node 1 (Sếp)..."
+    kafka-server-start.sh infrastructure/.config/server-1.properties > infrastructure/kafka-data/broker-1.log 2>&1 &
+    @echo "Đang khởi động Node 2 (Lính)..."
+    kafka-server-start.sh infrastructure/.config/server-2.properties > infrastructure/kafka-data/broker-2.log 2>&1 &
+    @echo "Cả 2 Node đang chạy ngầm. Log được lưu tại infrastructure/kafka-data/broker-x.log"
+    @echo "Để tắt Kafka, hãy chạy: just stop-kafka"
 
 stop-kafka:
     @echo "Đang dẹp tiệm Kafka..."
     -kafka-server-stop.sh
-    sleep 3
+    sleep 5
     -pkill -f kafka-server-start.sh
-    @echo "Đã tắt sạch Kafka."
-
-start-flink:
-    @echo "[Flink] Đang khởi động Flink với Kerberos..."
-    @export FLINK_ENV_JAVA_OPTS="-Djava.security.auth.login.config={{justfile_directory()}}/infrastructure/flink-data/conf/flink_jaas.conf -Djava.security.krb5.conf={{justfile_directory()}}/infrastructure/kerberos-data/conf/krb5.conf" && \
-    WEBUIPORT=8081 start-cluster.sh
-    @echo "   [OK] Flink started :8081"
-
-stop-flink:
-    @echo "Đang dẹp tiệm Flink..."
-    stop-cluster.sh
-    @echo "Đã tắt Flink."
+    @echo "Đã tắt sạch các Node."
 
 start-spark:
-    @echo "[Spark] Đang khởi động Spark..."
-    @mkdir -p infrastructure/spark-data
-    @if pgrep -f "org.apache.spark.deploy.master.Master" > /dev/null; then \
-        echo "   [OK] Spark already running"; \
-        echo "   [STATUS] Master UI: http://127.0.0.1:8181"; \
-        echo "   [STATUS] Worker UI: http://127.0.0.1:8182"; \
-    else \
-        spark-class org.apache.spark.deploy.master.Master --host 127.0.0.1 --port 7077 --webui-port 8181 > infrastructure/spark-data/spark-master.log 2>&1 & \
-        sleep 3; \
-        spark-class org.apache.spark.deploy.worker.Worker --webui-port 8182 -d ./infrastructure/spark-data/worker-work spark://127.0.0.1:7077 > infrastructure/spark-data/spark-worker.log 2>&1 & \
-        sleep 2; \
-        echo "   [OK] Spark started :7077"; \
-        echo "   [STATUS] Master UI: http://127.0.0.1:8181"; \
-        echo "   [STATUS] Worker UI: http://127.0.0.1:8182"; \
-    fi
+    @echo "Đang khởi động Spark Master..."
+    spark-class org.apache.spark.deploy.master.Master --host 127.0.0.1 --port 7077 --webui-port 8181 > infrastructure/spark-data/spark-master.log 2>&1 &
+    @echo "Đợi master khởi động..."
+    sleep 3
+    @echo "Đang khởi động Spark Worker..."
+    spark-class org.apache.spark.deploy.worker.Worker --webui-port 8182 -d ./infrastructure/spark-data/worker-work spark://127.0.0.1:7077 > infrastructure/spark-data/spark-worker.log 2>&1 &
+    @echo "✅ Master UI: http://127.0.0.1:8181 | Worker UI: http://127.0.0.1:8182"
 
 stop-spark:
     @echo "Đang dẹp tiệm Spark..."
@@ -81,359 +29,38 @@ stop-spark:
     -pkill -f pyspark
     @echo "Đã tắt sạch Spark."
 
-start-postgres:
-    @echo "[PostgreSQL] Đang khởi động PostgreSQL..."
-    @mkdir -p infrastructure/pg_db infrastructure/postgres-logs
-    @if [ ! -f infrastructure/pg_db/PG_VERSION ]; then \
-        echo "   Initializing database cluster..."; \
-        initdb -D infrastructure/pg_db; \
-    fi
-    @if pg_ctl status -D infrastructure/pg_db > /dev/null 2>&1; then \
-        echo "   [OK] PostgreSQL already running"; \
-    else \
-        pg_ctl -D infrastructure/pg_db -l infrastructure/postgres-logs/postgres.log start; \
-        sleep 2; \
-        echo "   [OK] PostgreSQL started :5432"; \
-    fi
+start-kdc:
+    @echo "Đang khởi động KDC..."
+    krb5kdc -n -r ETL.LOCAL -d infrastructure/kerberos-data/data/principal -p 8888 > infrastructure/kerberos-data/logs/krb5kdc.log 2>&1 &
+    @echo "✅ KDC đang chạy :8888"
 
-stop-postgres:
-    @echo "Đang dẹp tiệm PostgreSQL..."
-    -pg_ctl -D infrastructure/pg_db stop
-    @echo "Đã tắt PostgreSQL."
+stop-kdc:
+    @echo "Đang dẹp tiệm KDC..."
+    -pkill -f krb5kdc
+    @echo "Đã tắt KDC."
 
-# ============================================================================
-# ORCHESTRATION - Start/Stop All Services
-# ============================================================================
+start-zookeeper:
+    @echo "Đang khởi động ZooKeeper..."
+    zkServer.sh start
+    @echo "✅ ZooKeeper đang chạy :2181"
 
-start-all:
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "[START] Starting ALL services with Kerberos..."
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo ""
-    just start-kdc
-    sleep 2
-    just start-zookeeper
-    sleep 3
-    just start-kafka
-    sleep 3
-    just start-flink
-    @echo ""
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "[OK] All services started!"
-    @echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    @echo "[STATUS] URLs:"
-    @echo "   - ZooKeeper: localhost:2181"
-    @echo "   - Kafka:     localhost:9092"
-    @echo "   - KDC:       localhost:8888 (realm: ETL.LOCAL)"
-    @echo "   - Flink UI:  http://localhost:8081"
-    @echo ""
-    @echo "Next: just submit-flink-job"
+stop-zookeeper:
+    @echo "Đang dẹp tiệm ZooKeeper..."
+    zkServer.sh stop
+    @echo "Đã tắt ZooKeeper."
 
-stop-all:
-    @echo "[STOP] Stopping all services..."
-    -just stop-flink
-    -just stop-kafka
-    -just stop-zookeeper
-    -just stop-kdc
-    -just stop-spark
-    -just stop-postgres
-    @echo "[OK] All services stopped"
+start-flink:
+    @echo "Đang khởi động Flink..."
+    WEBUIPORT=8081 start-cluster.sh
+    @echo "✅ Flink UI: http://localhost:8081"
 
-restart-all:
-    just stop-all
-    sleep 5
-    just start-all
-
-# ============================================================================
-# FLINK JOBS
-# ============================================================================
-
-submit-flink-job:
-    @echo "[Flink] Submitting Flink Bronze Ingest Job..."
-    flink run -py {{justfile_directory()}}/../scripts/flink_bronze_ingest.py
-
-list-flink-jobs:
-    @flink list
-
-cancel-flink-job JOB_ID:
-    @echo "Cancelling Flink job {{JOB_ID}}..."
-    flink cancel {{JOB_ID}}
-
-cancel-all-flink-jobs:
-    @echo "Cancelling all Flink jobs..."
-    @flink list 2>&1 | grep -oP "[a-f0-9]{32}" | xargs -I {} flink cancel {} || true
-
-# ============================================================================
-# TESTING & VERIFICATION
-# ============================================================================
-
-test-kafka-topic TOPIC:
-    @echo "[Kafka] Testing Kafka topic: {{TOPIC}}"
-    kafka-console-producer.sh --bootstrap-server localhost:9092 --topic {{TOPIC}}
-
-test-all-topics:
-    @echo "[Kafka] Sending test messages to all 5 topics..."
-    @echo '{"test_id":"1","source":"events.user","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%S)'Z"}' | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic events.user
-    @echo "[OK] Sent to events.user"
-    @echo '{"test_id":"2","source":"events.txn","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%S)'Z"}' | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic events.txn
-    @echo "[OK] Sent to events.txn"
-    @echo '{"test_id":"3","source":"events.iot","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%S)'Z"}' | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic events.iot
-    @echo "[OK] Sent to events.iot"
-    @echo '{"test_id":"4","source":"logs.app","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%S)'Z"}' | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic logs.app
-    @echo "[OK] Sent to logs.app"
-    @echo '{"test_id":"5","source":"clicks.web","timestamp":"'$(date -u +%Y-%m-%dT%H:%M:%S)'Z"}' | kafka-console-producer.sh --bootstrap-server localhost:9092 --topic clicks.web
-    @echo "[OK] Sent to clicks.web"
-    @echo ""
-    @echo "Wait 15 minutes then run: just verify-bronze"
-
-verify-bronze:
-    @echo "[VERIFY] Checking Bronze layer data..."
-    @echo ""
-    @echo "Files written in last 20 minutes:"
-    @find {{justfile_directory()}}/../datalake/bronze -name "*.ndjson" -mmin -20 -ls 2>/dev/null || echo "No files found"
-    @echo ""
-    @echo "In-progress files:"
-    @find {{justfile_directory()}}/../datalake/bronze -name "*inprogress*" -mmin -20 -ls 2>/dev/null || echo "No inprogress files"
-    @echo ""
-    @echo "Record counts by source:"
-    @for src in user_events transactions iot_sensors app_logs clickstream; do \
-        count=$(find {{justfile_directory()}}/../datalake/bronze/source=$$src -name "*inprogress*" -exec wc -l {} + 2>/dev/null | tail -1 | awk '{print $1}'); \
-        echo "  source=$$src: $$count records"; \
-    done
-
-kafka-topics:
-    @echo "[Kafka] Kafka Topics:"
-    kafka-topics.sh --bootstrap-server localhost:9092 --list
-
-kafka-consumer-groups:
-    @echo "[Kafka] Kafka Consumer Groups:"
-    kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
-
-# ============================================================================
-# SPARK JOBS
-# ============================================================================
+stop-flink:
+    @echo "Đang dẹp tiệm Flink..."
+    stop-cluster.sh
+    @echo "Đã tắt Flink."
 
 shell:
     pyspark --master spark://127.0.0.1:7077 --jars $SPARK_KAFKA_JARS --conf spark.executor.extraClassPath=$SPARK_KAFKA_JARS --conf spark.driver.extraClassPath=$SPARK_KAFKA_JARS --conf spark.jars=$SPARK_KAFKA_JARS --conf spark.executor.userClassPathFirst=true --conf spark.driver.userClassPathFirst=true
 
-run-silver-events DATE:
-    @echo "[ETL] Running Bronze → Silver for domain=events (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_bronze_to_silver_events.py
-
-run-silver-transactions DATE:
-    @echo "[ETL] Running Bronze → Silver for domain=transactions (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_bronze_to_silver_transactions.py
-
-run-silver-customers DATE:
-    @echo "[ETL] Running Bronze → Silver for domain=customers (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_bronze_to_silver_customers.py
-
-run-silver-inventory DATE:
-    @echo "[ETL] Running Bronze → Silver for domain=inventory (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_bronze_to_silver_inventory.py
-
-run-all-silver DATE:
-    @echo "[ETL] Running ALL Bronze → Silver jobs for date={{DATE}}"
-    just run-silver-events {{DATE}}
-    just run-silver-transactions {{DATE}}
-    just run-silver-customers {{DATE}}
-    just run-silver-inventory {{DATE}}
-
-# ============================================================================
-# GOLD LAYER JOBS (KPIs)
-# ============================================================================
-
-run-gold-daily-revenue DATE:
-    @echo "[STATUS] Running Silver → Gold for kpi=daily_revenue (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_silver_to_gold_daily_revenue.py
-
-run-gold-user-retention DATE:
-    @echo "[STATUS] Running Silver → Gold for kpi=user_retention (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_silver_to_gold_user_retention.py
-
-run-gold-iot-anomaly DATE:
-    @echo "[STATUS] Running Silver → Gold for kpi=iot_anomaly_summary (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_silver_to_gold_iot_anomaly.py
-
-run-gold-inventory-turnover DATE:
-    @echo "[STATUS] Running Silver → Gold for kpi=inventory_turnover (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --conf spark.sql.shuffle.partitions=8 \
-        --conf spark.sql.parquet.compression.codec=snappy \
-        {{justfile_directory()}}/../scripts/spark_silver_to_gold_inventory_turnover.py
-
-run-all-gold DATE:
-    @echo "[STATUS] Running ALL Silver → Gold KPI jobs for date={{DATE}}"
-    just run-gold-daily-revenue {{DATE}}
-    just run-gold-user-retention {{DATE}}
-    just run-gold-iot-anomaly {{DATE}}
-    just run-gold-inventory-turnover {{DATE}}
-
-# ============================================================================
-# DATABASE
-# ============================================================================
-
-postgres-shell:
-    psql -h localhost -d etl_analytics
-
-create-databases:
-    @echo "[PostgreSQL] Creating databases..."
-    @createdb -h localhost airflow_metadata 2>/dev/null || echo "airflow_metadata already exists"
-    @createdb -h localhost etl_analytics 2>/dev/null || echo "etl_analytics already exists"
-    @echo "[OK] Databases ready"
-
-create-postgres-schemas:
-    @echo "[PostgreSQL] Creating PostgreSQL table schemas..."
-    psql -h localhost -d etl_analytics -f infrastructure/postgres-schemas/create_gold_tables.sql
-    @echo "[OK] Schemas created"
-
-load-gold-to-postgres-daily-revenue DATE:
-    @echo "[LOAD] Loading Gold → PostgreSQL for kpi_daily_revenue (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --jars {{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.driver.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.executor.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.sql.shuffle.partitions=8 \
-        {{justfile_directory()}}/../scripts/spark_gold_to_postgres_daily_revenue.py
-
-load-gold-to-postgres-user-retention DATE:
-    @echo "[LOAD] Loading Gold → PostgreSQL for kpi_user_retention (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --jars {{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.driver.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.executor.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.sql.shuffle.partitions=8 \
-        {{justfile_directory()}}/../scripts/spark_gold_to_postgres_user_retention.py
-
-load-gold-to-postgres-inventory-turnover DATE:
-    @echo "[LOAD] Loading Gold → PostgreSQL for kpi_inventory_turnover (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --jars {{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.driver.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.executor.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.sql.shuffle.partitions=8 \
-        {{justfile_directory()}}/../scripts/spark_gold_to_postgres_inventory_turnover.py
-
-load-gold-to-postgres-iot-anomaly DATE:
-    @echo "[LOAD] Loading Gold → PostgreSQL for kpi_iot_anomaly_summary (date={{DATE}})"
-    PROCESSING_DATE={{DATE}} spark-submit \
-        --master spark://127.0.0.1:7077 \
-        --jars {{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.driver.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.executor.extraClassPath={{justfile_directory()}}/../jars/postgresql-42.7.4.jar \
-        --conf spark.sql.shuffle.partitions=8 \
-        {{justfile_directory()}}/../scripts/spark_gold_to_postgres_iot_anomaly.py
-
-load-all-gold-to-postgres DATE:
-    @echo "[LOAD] Loading ALL Gold KPIs → PostgreSQL for date={{DATE}}"
-    just load-gold-to-postgres-daily-revenue {{DATE}}
-    just load-gold-to-postgres-user-retention {{DATE}}
-    just load-gold-to-postgres-inventory-turnover {{DATE}}
-    just load-gold-to-postgres-iot-anomaly {{DATE}}
-
-verify-postgres:
-    @echo "[VERIFY] Verifying PostgreSQL data..."
-    @echo ""
-    @echo "Table: kpi_daily_revenue"
-    @psql -h localhost -d etl_analytics -c "SELECT COUNT(*), MIN(dt), MAX(dt) FROM kpi_daily_revenue;" 2>/dev/null || echo "  [WARN] No data or table doesn't exist"
-    @echo ""
-    @echo "Table: kpi_user_retention"
-    @psql -h localhost -d etl_analytics -c "SELECT COUNT(*), MIN(dt), MAX(dt) FROM kpi_user_retention;" 2>/dev/null || echo "  [WARN] No data or table doesn't exist"
-    @echo ""
-    @echo "Table: kpi_inventory_turnover"
-    @psql -h localhost -d etl_analytics -c "SELECT COUNT(*), MIN(dt), MAX(dt) FROM kpi_inventory_turnover;" 2>/dev/null || echo "  [WARN] No data or table doesn't exist"
-    @echo ""
-    @echo "Table: kpi_iot_anomaly_summary"
-    @psql -h localhost -d etl_analytics -c "SELECT COUNT(*), MIN(dt), MAX(dt) FROM kpi_iot_anomaly_summary;" 2>/dev/null || echo "  [WARN] No data or table doesn't exist"
-
-# ============================================================================
-# STATUS & LOGS
-# ============================================================================
-
-status:
-    @echo "[STATUS] Service Status:"
-    @echo ""
-    @if pgrep -f krb5kdc > /dev/null; then echo "KDC:       [OK] RUNNING"; else echo "KDC:       [FAIL] STOPPED"; fi
-    @if pgrep -f QuorumPeerMain > /dev/null; then echo "ZooKeeper: [OK] RUNNING"; else echo "ZooKeeper: [FAIL] STOPPED"; fi
-    @if pgrep -f 'kafka.Kafka' > /dev/null; then echo "Kafka:     [OK] RUNNING"; else echo "Kafka:     [FAIL] STOPPED"; fi
-    @if pgrep -f 'org.apache.flink' > /dev/null; then echo "Flink:     [OK] RUNNING"; else echo "Flink:     [FAIL] STOPPED"; fi
-    @if pgrep -f 'org.apache.spark.deploy.master.Master' > /dev/null; then echo "Spark:     [OK] RUNNING"; else echo "Spark:     [FAIL] STOPPED"; fi
-    @if pg_ctl status -D infrastructure/pg_db > /dev/null 2>&1; then echo "Postgres:  [OK] RUNNING"; else echo "Postgres:  [FAIL] STOPPED"; fi
-
-logs SERVICE:
-    @tail -50 infrastructure/{{SERVICE}}-data/logs/*.log 2>/dev/null || tail -50 infrastructure/{{SERVICE}}-data/*.log 2>/dev/null
-
-# ============================================================================
-# CLEANUP
-# ============================================================================
-
-clean-bronze:
-    @echo "[WARN] Cleaning Bronze layer..."
-    @read -p "Are you sure? [y/N] " -n 1 -r; \
-    if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-        rm -rf {{justfile_directory()}}/../datalake/bronze/*; \
-        echo "[OK] Bronze layer cleaned"; \
-    fi
-
-clean-all-data:
-    @echo "[WARN] This will delete ALL data (Bronze/Silver/Gold/Checkpoints)"
-    @read -p "Are you sure? [y/N] " -n 1 -r; \
-    if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-        rm -rf {{justfile_directory()}}/../datalake/bronze/*; \
-        rm -rf {{justfile_directory()}}/../datalake/silver/*; \
-        rm -rf {{justfile_directory()}}/../datalake/gold/*; \
-        rm -rf {{justfile_directory()}}/../datalake/checkpoints/*; \
-        echo "[OK] All data cleaned"; \
-    fi
-
-# ============================================================================
-# ATLAS SCHEMA MIGRATION
-# ============================================================================
-
-schema-migrate ENV="local":
-    @echo "[ATLAS] Applying migrations (env={{ENV}})"
-    atlas migrate apply --env {{ENV}} --dir file://{{justfile_directory()}}/../migrations
-
-schema-lint:
-    @echo "[ATLAS] Linting schema"
-    atlas migrate lint --env local --latest 1
-
-schema-hash:
-    @echo "[ATLAS] Generating migration hash"
-    atlas migrate hash --dir file://{{justfile_directory()}}/../migrations
-
-schema-status:
-    @echo "[ATLAS] Migration status"
-    atlas migrate status --env local
+test:
+    kafka-console-producer.sh --bootstrap-server localhost:9092 --topic user-events

@@ -24,9 +24,14 @@ jobs:
         with:
           name: tandat-etl
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          pushFilter: '(-source$|nixpkgs\.tar\.gz$)'
 
-      - name: Build CI/CD shell
+      - name: Debug - Check Cachix config
+        run: |
+          echo "=== Cachix Configuration ==="
+          cat ~/.config/cachix/cachix.dhall || echo "No config found"
+          echo "=== Cache URL ==="
+          echo "https://tandat-etl.cachix.org"
+
+      - name: Build and push to Cachix
         run: nix build .#devShells.x86_64-linux.default --accept-flake-config --impure
-
-      - name: Push to Cachix
-        run: cachix push tandat-etl ./result
