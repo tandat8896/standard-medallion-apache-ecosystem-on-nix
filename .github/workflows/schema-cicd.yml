@@ -22,10 +22,10 @@ jobs:
           name: tandat-etl
 
       - name: Check migration integrity
-        run: nix develop .#cicd --command just schema-hash
+        run: nix develop --accept-flake-config --command just schema-hash
 
       - name: Lint migrations
-        run: nix develop .#cicd --command just schema-lint
+        run: nix develop --accept-flake-config --command just schema-lint
 
   deploy-staging:
     if: github.ref == 'refs/heads/main'
@@ -44,4 +44,4 @@ jobs:
       - name: Apply migrations to staging
         env:
           ATLAS_STAGING_URL: ${{ secrets.ATLAS_STAGING_URL }}
-        run: nix develop .#cicd --command atlas migrate apply --env staging --dry-run
+        run: nix develop --accept-flake-config --command atlas migrate apply --env staging --dry-run
