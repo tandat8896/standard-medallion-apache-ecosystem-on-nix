@@ -1,3 +1,9 @@
+# Auto-load .env file for environment variables (passwords, etc.)
+set dotenv-load
+
+# Set environment variables for all commands
+export PGPASSFILE := justfile_directory() + "/infrastructure/.pgpass"
+
 start-kafka:
     @echo "Đang khởi động Node 1 (Sếp)..."
     kafka-server-start.sh infrastructure/.config/server-1.properties > infrastructure/kafka-data/broker-1.log 2>&1 &
@@ -60,7 +66,93 @@ stop-flink:
     @echo "Đã tắt Flink."
 
 shell:
-    pyspark --master spark://127.0.0.1:7077 --jars $SPARK_KAFKA_JARS --conf spark.executor.extraClassPath=$SPARK_KAFKA_JARS --conf spark.driver.extraClassPath=$SPARK_KAFKA_JARS --conf spark.jars=$SPARK_KAFKA_JARS --conf spark.executor.userClassPathFirst=true --conf spark.driver.userClassPathFirst=true
+    pyspark --master spark://127.0.0.1 :7077 --jars $SPARK_KAFKA_JARS --conf spark.executor.extraClassPath=$SPARK_KAFKA_JARS --conf spark.driver.extraClassPath=$SPARK_KAFKA_JARS --conf spark.jars=$SPARK_KAFKA_JARS --conf spark.executor.userClassPathFirst=true --conf spark.driver.userClassPathFirst=true
 
 test:
     kafka-console-producer.sh --bootstrap-server localhost:9092 --topic user-events
+
+# ============================================================================
+# POSTGRESQL COMMANDS
+# ============================================================================
+
+start-postgres:
+    @echo "[PostgreSQL] Starting..."
+    @mkdir -p infrastructure/pg_db infrastructure/postgres-logs
+    @if [ ! -f infrastructure/pg_db/PG_VERSION ]; then \
+        echo "[PostgreSQL] Initializing database cluster..."; \
+        initdb -D infrastructure/pg_db; \
+    fi
+    pg_ctl -D infrastructure/pg_db -l infrastructure/postgres-logs/postgres.log start
+    @sleep 2
+    @echo "[OK] PostgreSQL running at localhost:5432"
+
+stop-postgres:
+    @echo "[PostgreSQL] Stopping..."
+    -pg_ctl -D infrastructure/pg_db stop
+    @echo "[OK] PostgreSQL stopped"
+
+create-databases:
+    @echo "[PostgreSQL] Creating databases..."
+    -createdb -h localhost etl_analytics
+    -createdb -h localhost airflow_metadata
+    -createdb -h localhost etl_analytics_staging
+    @echo "[OK] Databases created: etl_analytics, airflow_metadata, etl_analytics_staging"
+
+# ============================================================================
+# ATLAS SCHEMA MIGRATION COMMANDS
+# ============================================================================
+
+schema-lint:
+    @echo "[Atlas] Linting migrations..."
+    atlas migrate lint --env local --latest 1
+    @echo "[OK] Migrations validated"
+
+schema-migrate:
+    @echo "[Atlas] Applying migrations to local..."
+    atlas migrate apply --env local
+    @echo "[OK] Migrations applied to local"
+
+schema-verify:
+    @echo "[Atlas] Inspecting current schema..."
+    atlas schema inspect --env local
+
+schema-diff:
+    @echo "[Atlas] Generating schema diff..."
+    atlas schema diff --env local
+
+schema-hash:
+    @echo "[Atlas] Computing migration hash..."
+    atlas migrate hash --env local
+
+# Deploy to staging (requires ATLAS_STAGING_URL env var)
+deploy-staging:
+    @echo "[Atlas] Deploying to STAGING..."
+    @if [ -z "$$ATLAS_STAGING_URL" ]; then \
+        echo "[ERROR] ATLAS_STAGING_URL not set"; \
+        echo "Usage: ATLAS_STAGING_URL='postgres://...' just deploy-staging"; \
+        exit 1; \
+    fi
+    atlas migrate apply --env staging --dry-run
+    @echo "[Dry-run OK] Apply for real? (Ctrl+C to cancel, Enter to continue)"
+    @read confirm
+    atlas migrate apply --env staging
+    @echo "[OK] Deployed to staging"
+
+# Deploy to staging using local database as staging
+deploy-staging-local:
+    @echo "[Atlas] Deploying to LOCAL staging database..."
+    ATLAS_STAGING_URL='postgres://localhost:5432/etl_analytics_staging?sslmode=disable' atlas migrate apply --env staging
+    @echo "[OK] Deployed to etl_analytics_staging"
+
+# ============================================================================
+# STATUS COMMANDS
+# ============================================================================
+
+status:
+    @echo "=== Service Status ==="
+    @echo -n "ZooKeeper:   "; pgrep -f "org.apache.zookeeper" > /dev/null && echo "[RUNNING]" || echo "[STOPPED]"
+    @echo -n "Kafka:       "; pgrep -f "kafka.Kafka" > /dev/null && echo "[RUNNING]" || echo "[STOPPED]"
+    @echo -n "Flink:       "; pgrep -f "flink" > /dev/null && echo "[RUNNING]" || echo "[STOPPED]"
+    @echo -n "Spark:       "; pgrep -f "org.apache.spark.deploy.master.Master" > /dev/null && echo "[RUNNING]" || echo "[STOPPED]"
+    @echo -n "PostgreSQL:  "; pg_ctl -D infrastructure/pg_db status > /dev/null 2>&1 && echo "[RUNNING]" || echo "[STOPPED]"
+    @echo -n "KDC:         "; pgrep -f "krb5kdc" > /dev/null && echo "[RUNNING]" || echo "[STOPPED]"

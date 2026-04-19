@@ -55,6 +55,8 @@
         ps.pytz              # Required by PyFlink
         ps.pyyaml             # Required by PyFlink for configuration parsing
         ps.wheel               # Required by PyFlink for file system handling
+        ps.python-dotenv
+        
         
       ]);
       runtimeLibs = with pkgs; [

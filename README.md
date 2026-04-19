@@ -32,11 +32,22 @@
   - `kpi=iot_anomaly_summary` (0 records) - Placeholder for 3σ anomaly detection
 - Total Gold: **~10KB**
 
-### [TODO] Phase 4: Database Layer
-- [ ] Setup PostgreSQL analytics database
-- [ ] Load Gold KPIs → PostgreSQL tables
-- [ ] Create views/materialized views
-- [ ] Setup daily orchestration (Airflow/cron)
+### [OK] Phase 4: Database & CI/CD (95% COMPLETED)
+- [x] **PostgreSQL 15** setup at `ETL/infrastructure/pg_db/`
+- [x] **Databases created**: `etl_analytics`, `airflow_metadata`
+- [x] **Schema migrations** with Ariga Atlas (`migrations/`, `atlas.hcl`)
+- [x] **4 KPI tables** created: daily_revenue, user_retention, inventory_turnover, iot_anomaly_summary
+- [x] **JDBC integration** for Spark → PostgreSQL (postgresql-42.7.4.jar)
+- [x] **CI/CD workflows** (6 GitHub Actions):
+  - `build-cache.yml` - Nix build + Cachix caching
+  - `schema-lint.yml` - PR schema validation
+  - `schema-deploy-staging.yml` - Auto-deploy to staging
+  - `schema-deploy-prod.yml` - Manual prod deployment
+  - `schema-cicd.yml` - Full schema pipeline
+  - `test-postgres-load.yml` - PostgreSQL integration tests
+- [x] **Cachix binary cache** configured (tandat-etl.cachix.org)
+- [ ] Load Gold data → PostgreSQL (ready to run)
+- [ ] Setup Airflow orchestration (optional)
 
 ---
 
@@ -64,6 +75,15 @@
 - `just start-all` - Start toàn bộ stack (KDC → ZK → Kafka → Flink)
 - `just run-all-silver 2026-04-17` - Chạy 4 Silver transforms
 - `just run-all-gold 2026-04-17` - Chạy 4 Gold KPIs
+
+### CI/CD & DevOps
+- **Ariga Atlas** - Declarative schema migrations
+- **GitHub Actions** - 6 automated workflows
+- **Cachix** - Binary cache cho Nix builds (tandat-etl.cachix.org)
+  - Cache hits: ~589 MB Nix store paths
+  - CI build time: ~2 phút (với cache) vs ~15 phút (cold build)
+- **Schema versioning** - Migrations tracked in `migrations/`
+- **Automated testing** - Schema lint + PostgreSQL integration tests
 
 ---
 
@@ -230,25 +250,102 @@ just verify-bronze    # Check .inprogress files
 
 ---
 
-## Next Steps (Phase 4)
+## Next Steps (Phase 5 - Optional Enhancements)
 
-1. **Setup PostgreSQL**
+Phase 4 đã hoàn thành 95%. Các bước tiếp theo (không bắt buộc):
+
+1. **Load Gold Data → PostgreSQL** (Ready to run)
    ```bash
+   cd ETL
    just start-postgres
-   just create-databases  # airflow_metadata, etl_analytics
+   just load-all-gold-to-postgres 2026-04-17
+   just verify-postgres  # Verify 29 records loaded
    ```
 
-2. **Load Gold → PostgreSQL**
-   - Create table schemas matching Gold Parquet
-   - Spark JDBC write: `df.write.jdbc(...)`
+2. **Resolve Cachix Cache Ownership** (Optional)
+   - Cache đang hoạt động tốt (CI/CD works, downloads work)
+   - Nhưng không visible trong user dashboard
+   - Option A: Create new cache `tandat8896-etl` với own account
+   - Option B: Get collaborator access to existing `tandat-etl`
 
-3. **Orchestration**
-   - Airflow DAGs for daily Silver/Gold jobs
-   - Or: cron jobs with `just run-all-silver`
+3. **Orchestration với Airflow** (Optional)
+   - Create DAGs for daily pipeline
+   - Schedule: 01:00 Silver, 02:00 Gold, 03:00 PostgreSQL load
+   - Airflow metadata DB đã ready
 
-4. **Monitoring**
-   - Grafana + Prometheus for metrics
+4. **Monitoring & Observability** (Optional)
+   - Grafana + Prometheus dashboards
    - Track: Kafka lag, Flink backpressure, Spark job duration
+   - Alert rules cho job failures
+
+5. **Production Hardening** (Optional)
+   - Enable Kerberos authentication
+   - Kafka SASL/SSL setup
+   - PostgreSQL views cho reporting
+   - Data retention policies
+
+---
+
+## CI/CD Workflows
+
+### GitHub Actions (6 Workflows)
+
+#### 1. `build-cache.yml` - Nix Build + Cachix Caching
+- **Trigger**: Push to `main`, PRs, manual dispatch
+- **Purpose**: Build Nix environment, push to Cachix cache
+- **Cache**: `tandat-etl.cachix.org` (~589 MB)
+- **Speedup**: 2 phút (cached) vs 15 phút (cold build)
+
+#### 2. `schema-lint.yml` - Schema Validation
+- **Trigger**: PRs touching `migrations/` hoặc `atlas.hcl`
+- **Purpose**: Lint schema changes với Atlas
+- **Checks**: SQL syntax, destructive changes, best practices
+
+#### 3. `schema-cicd.yml` - Full Schema Pipeline
+- **Trigger**: Push to `main`
+- **Steps**: Lint → Verify → Deploy staging
+
+#### 4. `schema-deploy-staging.yml` - Auto Deploy Staging
+- **Trigger**: Merge to `main`
+- **Environment**: `staging`
+- **Secret**: `STAGING_DB_URL`
+
+#### 5. `schema-deploy-prod.yml` - Manual Prod Deploy
+- **Trigger**: Manual workflow dispatch
+- **Confirmation**: Must type "DEPLOY" to proceed
+- **Steps**: Dry-run → Apply migrations
+- **Secret**: `PROD_DB_URL`
+
+#### 6. `test-postgres-load.yml` - Integration Tests
+- **Trigger**: PRs touching Spark scripts
+- **Tests**: PostgreSQL schema, JDBC connectivity
+
+### Cachix Setup
+
+```bash
+# Local machine
+cachix use tandat-etl  # Download from cache
+cachix push tandat-etl ./result  # Upload to cache
+
+# GitHub Actions (automatic)
+# Uses CACHIX_AUTH_TOKEN secret
+```
+
+### Schema Migrations với Atlas
+
+```bash
+cd ETL
+
+# Local development
+just schema-lint          # Validate migrations
+just schema-migrate       # Apply to local DB
+just schema-verify        # Inspect current schema
+just schema-diff          # Compare schema vs migrations
+
+# Production (via GitHub Actions)
+# Push to main → Auto-deploy staging
+# Manual trigger → Deploy production
+```
 
 ---
 
