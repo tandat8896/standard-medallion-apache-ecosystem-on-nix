@@ -118,10 +118,10 @@
           pkgs.apacheKafka
           pkgs.zookeeper
           pkgs.postgresql_15
-          flink
           pkgs.tree
           pkgs.just
           pkgs.jq
+          flink
           pkgs.krb5
           pkgs.atlas
           pkgs.cachix
@@ -131,31 +131,27 @@
           export LD_LIBRARY_PATH="/usr/lib/wsl/lib:${pkgs.lib.makeLibraryPath runtimeLibs}:$LD_LIBRARY_PATH"
           export JAVA_HOME="${pkgs.openjdk11.home}"
 
-          # ETL environment variables
+          # Tất cả data dồn vào ETL/infrastructure/<service>-data/
           export AIRFLOW_HOME="$PWD/ETL/infrastructure/airflow-data"
           export SPARK_KAFKA_JARS="${pkgs.lib.concatStringsSep "," kafkaJars}"
           export SPARK_POSTGRES_JAR="${postgresJar}"
-
-          # Flink
           export FLINK_HOME="${flink}"
           export PATH="$FLINK_HOME/bin:$PATH"
           export FLINK_CONF_DIR="$PWD/ETL/infrastructure/flink-data/conf"
           export FLINK_LOG_DIR="$PWD/ETL/infrastructure/flink-data/logs"
-          export PYTHONPATH="${flink}/opt/python/pyflink:${flink}/opt/python/py4j-0.10.9.7-src.zip:${flink}/opt/python/cloudpickle-2.2.0-src.zip:$PYTHONPATH"
-          mkdir -p $FLINK_LOG_DIR
+          export FLINK_ENV_JAVA_OPTS="-cp /home/tandat8896-nix/tandat-interview/ETL/infrastructure/flink-data/lib/kafka-clients-4.1.0.jar"
 
-          # Kafka/ZooKeeper paths
+          # Add PyFlink to PYTHONPATH for flink run -py support (unzipped folder)
+          export PYTHONPATH="${flink}/opt/python/pyflink:${flink}/opt/python/py4j-0.10.9.7-src.zip:${flink}/opt/python/cloudpickle-2.2.0-src.zip:$PYTHONPATH"
+
+          mkdir -p $AIRFLOW_HOME
+          mkdir -p $FLINK_LOG_DIR
           export ZOOCFGDIR="$PWD/ETL/infrastructure/zookeeper-data/conf"
           export ZOO_LOG_DIR="$PWD/ETL/infrastructure/zookeeper-data/logs"
-          mkdir -p $ZOOCFGDIR $ZOO_LOG_DIR
-
-          # Kerberos
+          mkdir -p $ZOOCFGDIR
+          mkdir -p $ZOO_LOG_DIR
           export KRB5_CONFIG="$PWD/ETL/infrastructure/kerberos-data/conf/krb5.conf"
           export KRB5_KDC_PROFILE="$PWD/ETL/infrastructure/kerberos-data/conf/kdc.conf"
-
-          echo "ETL Production Shell (no Rust/CodeScene/lldb)"
-          echo "Available: Spark, Kafka, PostgreSQL, Atlas, Kerberos"
-          echo "Full dev: nix develop ./flake-full.nix"
         '';
       };
 
