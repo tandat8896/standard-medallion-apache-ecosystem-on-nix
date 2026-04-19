@@ -17,7 +17,7 @@
 !**/*.yml
 !**/*.conf
 !**/*.properties
-!**/*.sh
+!**/conf/**/*.sh      # Only allow .sh in conf/ directories (e.g., spark-env.sh)
 !**/*.envrc
 !**/masters
 !**/workers
@@ -66,11 +66,19 @@
 !/datalake/
 !/ingest/
 !/dead_letter/
+!/scripts/
 
 # Nhưng chặn toàn bộ dữ liệu thực tế bên trong (Parquet, CSV, JSON, v.v.)
 /datalake/**/*.parquet
 /datalake/**/*.ndjson
 /datalake/**/*.csv
 /datalake/**/*.json
+/datalake/checkpoints/**/*
 /ingest/raw/**/*
 !**/raw/**/.gitkeep
+
+# PostgreSQL data
+/ETL/infrastructure/postgres-data/**/*
+/ETL/infrastructure/postgres-logs/**/*
+!**/postgres-data/.gitkeep
+!**/postgres-logs/.gitkeep
