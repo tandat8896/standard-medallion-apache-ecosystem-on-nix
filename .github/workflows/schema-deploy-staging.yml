@@ -1,0 +1,20 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ariga/setup-atlas@v0
+
+      - name: Apply migrations
+        env:
+          ATLAS_STAGING_URL: ${{ secrets.ATLAS_STAGING_URL }}
+        run: atlas migrate apply --env staging

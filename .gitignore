@@ -5,10 +5,13 @@
 !/ETL/
 !/flake.nix
 !/flake.lock
+!/flake-full.nix
 !/.envrc
 !/justfile
-!/README.md
-!/README-flink.md
+!/.github/
+!/atlas.hcl
+!/migrations/
+!/jars/
 
 # --- 1. SHOW CONFIGS (Mở khóa toàn bộ file cấu hình) ---
 !**/conf/
@@ -46,6 +49,9 @@
 /ETL/infrastructure/spark-data/worker-work/
 /ETL/infrastructure/flink-data/ha/
 /ETL/infrastructure/zookeeper-data/data/
+/ETL/infrastructure/pg_db/
+/ETL/infrastructure/postgres-data/
+/ETL/infrastructure/postgres-logs/
 
 # BẢO MẬT: Chặn Keytabs và KDC Database
 /ETL/infrastructure/kerberos-data/data/principal*
@@ -73,12 +79,11 @@
 /datalake/**/*.ndjson
 /datalake/**/*.csv
 /datalake/**/*.json
+/datalake/**/_SUCCESS
 /datalake/checkpoints/**/*
 /ingest/raw/**/*
 !**/raw/**/.gitkeep
 
-# PostgreSQL data
-/ETL/infrastructure/postgres-data/**/*
-/ETL/infrastructure/postgres-logs/**/*
-!**/postgres-data/.gitkeep
-!**/postgres-logs/.gitkeep
+# Chặn markdown files (docs/prompts)
+**/*.md
+scripts/prompts/

@@ -1,0 +1,47 @@
+name: Schema CI/CD
+
+on:
+  pull_request:
+    paths:
+      - 'migrations/**'
+      - 'atlas.hcl'
+  push:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: tandat-etl
+
+      - name: Check migration integrity
+        run: nix develop .#cicd --command just schema-hash
+
+      - name: Lint migrations
+        run: nix develop .#cicd --command just schema-lint
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/main'
+    needs: lint
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v26
+      - uses: cachix/cachix-action@v14
+        with:
+          name: tandat-etl
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Apply migrations to staging
+        env:
+          ATLAS_STAGING_URL: ${{ secrets.ATLAS_STAGING_URL }}
+        run: nix develop .#cicd --command atlas migrate apply --env staging --dry-run

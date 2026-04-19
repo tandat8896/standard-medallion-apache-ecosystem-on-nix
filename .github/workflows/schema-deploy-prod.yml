@@ -1,0 +1,27 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPLOY to confirm'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ariga/setup-atlas@v0
+
+      - name: Validate confirmation
+        if: github.event.inputs.confirm != 'DEPLOY'
+        run: exit 1
+
+      - name: Apply migrations
+        env:
+          ATLAS_PROD_URL: ${{ secrets.ATLAS_PROD_URL }}
+        run: |
+          atlas migrate apply --env prod --dry-run
+          atlas migrate apply --env prod
