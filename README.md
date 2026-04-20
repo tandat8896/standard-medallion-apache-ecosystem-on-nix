@@ -3,6 +3,8 @@
 > **Production-ready** data platform chạy hoàn toàn **local trên NixOS** (WSL2)
 > Không dùng Docker, không dùng Cloud – Pure Nix Flakes environment
 
+
+![Medallion Architecture](./docs/images/medallion_architecture.svg)
 ---
 
 ## [STATUS] Current Status (2026-04-19)
