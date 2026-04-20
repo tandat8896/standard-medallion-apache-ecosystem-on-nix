@@ -391,6 +391,9 @@ just schema-diff          # Compare schema vs migrations
 Đây là personal learning project. Nếu muốn replicate:
 
 1. Clone repo
+```bash
+https://github.com/tandat8896/standard-medallion-apache-ecosystem-on-nix
+```
 2. `nix develop` (requires Nix + flakes enabled)
 3. `cd ETL && just start-all`
 4. Follow Quick Start guide
