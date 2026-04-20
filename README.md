@@ -4,7 +4,7 @@
 > Không dùng Docker, không dùng Cloud – Pure Nix Flakes environment
 
 
-![Medallion Architecture](./docs/images/medallion_architecture.svg)
+![Medallion Architecture](./docs_images/medallion_architecture.svg)
 ---
 
 ## [STATUS] Current Status (2026-04-19)
