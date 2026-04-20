@@ -12,7 +12,7 @@
 !/atlas.hcl
 !/migrations/
 !/jars/
-
+!docs_images/
 # --- 1. SHOW CONFIGS (Mở khóa toàn bộ file cấu hình) ---
 !**/conf/
 !**/.config/
